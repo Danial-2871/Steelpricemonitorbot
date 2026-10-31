@@ -1,26 +1,20 @@
 import os
-from datetime import datetime
-from zoneinfo import ZoneInfo
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+import urllib.request
+import urllib.parse
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-IRAN = ZoneInfo("Asia/Tehran")
+CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "سلام! ربات پایش بازار آهن فعال شد.\n"
-        "گزارش قیمت میلگرد، تیرآهن، شمش و ورق به‌زودی راه‌اندازی می‌شود."
-    )
+message = "سلام! ربات پایش بازار آهن با موفقیت راه‌اندازی شد."
 
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("ربات فعال است.")
+url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
-def main():
-    app = Application.builder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("status", status))
-    app.run_polling()
+data = urllib.parse.urlencode({
+    "chat_id": CHAT_ID,
+    "text": message
+}).encode()
 
-if __name__ == "__main__":
-    main()
+request = urllib.request.Request(url, data=data)
+
+with urllib.request.urlopen(request) as response:
+    print(response.read().decode())
