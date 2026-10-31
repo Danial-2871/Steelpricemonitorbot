@@ -1,14 +1,11 @@
 name: Steel Price Bot
 
 on:
-workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-test:
-runs-on: ubuntu-latest
-steps:
-- name: Get project
-uses: actions/checkout@v4
-
-  - name: Check files
-    run: ls -la
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test workflow
+        run: echo "Workflow is working"
