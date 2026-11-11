@@ -1,20 +1,45 @@
+
 import os
+import json
 import urllib.request
 import urllib.parse
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-message = "سلام! ربات پایش بازار آهن با موفقیت راه‌اندازی شد."
+BASE = f"https://api.telegram.org/bot{TOKEN}/"
 
-url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+def telegram(method, data=None):
+    encoded = urllib.parse.urlencode(data or {}).encode()
+    request = urllib.request.Request(BASE + method, data=encoded)
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.loads(response.read().decode())
 
-data = urllib.parse.urlencode({
-    "chat_id": CHAT_ID,
-    "text": message
-}).encode()
+# دریافت پیام‌های جدید
+result = telegram("getUpdates", {"limit": 100})
+updates = result.get("result", [])
 
-request = urllib.request.Request(url, data=data)
+if not updates:
+    print("پیام جدیدی دریافت نشد.")
 
-with urllib.request.urlopen(request) as response:
-    print(response.read().decode())
+else:
+    for item in updates:
+        msg = item.get("message", {})
+        text = msg.get("text", "")
+
+        if text and str(msg.get("chat", {}).get("id")) == CHAT_ID:
+            reply = (
+                "پیام شما دریافت شد.\n\n"
+                "متن پیام:\n" + text[:3000]
+            )
+
+            telegram("sendMessage", {
+                "chat_id": CHAT_ID,
+                "text": reply
+            })
+
+    # تأیید دریافت پیام‌ها برای جلوگیری از تکرار
+    last_id = max(item["update_id"] for item in updates)
+    telegram("getUpdates", {"offset": last_id + 1, "limit": 1})
+
+print("بررسی پیام‌ها پایان یافت.")
